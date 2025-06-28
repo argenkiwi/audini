@@ -7,7 +7,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const audioUrls = result.audioUrls;
       const existingUrls = new Set(audioUrls[tabId] || []);
       message.urls.forEach(url => existingUrls.add(url));
-
       audioUrls[tabId] = Array.from(existingUrls);
       chrome.storage.local.set({ audioUrls }, () => {
         updateBadge(tabId);
@@ -15,7 +14,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
   } else if (message.type === "addToPlaylist") {
     addToPlaylist(message.url);
-    openPlayer(); // Open player when a track is added
+  } else if (message.type === "openPlaylist") {
+    openPlayer();
   }
 });
 
@@ -41,9 +41,17 @@ function createPlayerTab() {
 
 function addToPlaylist(url) {
   chrome.storage.local.get({ playlist: [] }, (result) => {
-    const playlist = result.playlist;
-    if (!playlist.includes(url)) {
+    let playlist = result.playlist;
+    const count = playlist.length;
+    if (Array.isArray(url)) {
+      let uniqueSet = new Set(playlist);
+      url.forEach(item => uniqueSet.add(item));
+      playlist = [...uniqueSet];
+    } else if (!playlist.includes(url)) {
       playlist.push(url);
+    }
+
+    if (playlist.length > count) {
       chrome.storage.local.set({ playlist });
     }
   });
@@ -65,17 +73,17 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    if (changeInfo.status === 'loading') {
-        chrome.storage.local.get({ audioUrls: {} }, (result) => {
-            const audioUrls = result.audioUrls;
-            if (audioUrls[tabId]) {
-                delete audioUrls[tabId];
-                chrome.storage.local.set({ audioUrls }, () => {
-                    updateBadge(tabId);
-                });
-            }
+  if (changeInfo.status === 'loading') {
+    chrome.storage.local.get({ audioUrls: {} }, (result) => {
+      const audioUrls = result.audioUrls;
+      if (audioUrls[tabId]) {
+        delete audioUrls[tabId];
+        chrome.storage.local.set({ audioUrls }, () => {
+          updateBadge(tabId);
         });
-    }
+      }
+    });
+  }
 });
 
 function updateBadge(tabId) {

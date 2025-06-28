@@ -22,12 +22,8 @@ document.addEventListener("DOMContentLoaded", () => {
     playlist.forEach((track, index) => {
       const listItem = document.createElement("li");
 
-      const dragHandle = document.createElement("span");
-      dragHandle.classList.add("drag-handle");
-      dragHandle.textContent = "☰"; // Unicode character for a hamburger icon
-
       const trackName = document.createElement("span");
-      trackName.textContent = track.split("/").pop();
+      trackName.textContent = track.substring(track.lastIndexOf('/') + 1);
       trackName.addEventListener("click", () => playTrack(index));
 
       const removeButton = document.createElement("button");
@@ -38,11 +34,11 @@ document.addEventListener("DOMContentLoaded", () => {
         removeTrack(index);
       });
 
-      listItem.appendChild(dragHandle);
       listItem.appendChild(trackName);
       listItem.appendChild(removeButton);
       playlistElement.appendChild(listItem);
     });
+
     updateActivePlaylistItem(currentTrackIndex);
   }
 
@@ -168,8 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize Sortable.js
   new Sortable(playlistElement, {
     animation: 150,
-    handle: '.drag-handle',
-    onEnd: function (evt) {
+    onEnd: function(evt) {
       const oldIndex = evt.oldIndex;
       const newIndex = evt.newIndex;
 

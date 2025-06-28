@@ -1,15 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
-  
   const addAllButton = document.getElementById("add-all");
-
-  
-
+  const openPlaylistButton = document.getElementById("open-playlist");
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tabId = tabs[0].id;
     chrome.storage.local.get({ audioUrls: {} }, (result) => {
       const audioList = document.getElementById("audio-list");
       const urls = result.audioUrls[tabId] || [];
-
       if (urls.length > 0) {
         urls.forEach((url) => {
           const listItem = document.createElement("li");
@@ -29,12 +25,13 @@ document.addEventListener("DOMContentLoaded", () => {
           audioList.appendChild(listItem);
         });
 
-        addAllButton.addEventListener("click", () => {
-          urls.forEach(url => {
-            chrome.runtime.sendMessage({ type: "addToPlaylist", url });
-          });
+        openPlaylistButton.addEventListener("click", () => {
+          chrome.runtime.sendMessage({ type: "openPlaylist" });
         });
 
+        addAllButton.addEventListener("click", () => {
+          chrome.runtime.sendMessage({ type: "addToPlaylist", url: urls });
+        });
       } else {
         const noAudioMessage = document.createElement("p");
         noAudioMessage.textContent = "No audio files detected on this page.";
