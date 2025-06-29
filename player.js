@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderPlaylist() {
     playlistElement.innerHTML = "";
-    playlist.forEach((track, index) => {
+    playlist.map(track => decodeURI(track)).forEach((track, index) => {
       const listItem = document.createElement("li");
 
       const trackName = document.createElement("span");
@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const trackUrl = playlist[currentTrackIndex];
       audioPlayer.src = trackUrl;
       audioPlayer.play();
-      currentTrackElement.textContent = trackUrl.split("/").pop();
+      currentTrackElement.textContent = decodeURI(trackUrl).split("/").pop();
       updateActivePlaylistItem(currentTrackIndex);
     } else if (playlist.length > 0) {
       // If current track is removed and playlist is not empty, play the first track

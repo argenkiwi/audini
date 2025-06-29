@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const listItem = document.createElement("li");
           const link = document.createElement("a");
           link.href = url;
-          link.textContent = url.split("/").pop();
+          link.textContent = decodeURI(url).split("/").pop();
           link.target = "_blank";
 
           const addButton = document.createElement("button");
