@@ -1,6 +1,9 @@
 {
   "name": "audini",
   "packageManager": "yarn@4.9.1",
+  "scripts": {
+    "build": "rollup --input player.js --plugin '@rollup/plugin-node-resolve' --file player.bundle.js"
+  },
   "dependencies": {
     "sortablejs": "^1.15.6"
   },
