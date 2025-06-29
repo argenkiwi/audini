@@ -1,3 +1,5 @@
+import Sortable from 'sortablejs';
+
 document.addEventListener("DOMContentLoaded", () => {
   const audioPlayer = document.getElementById("audio-player");
   const playlistElement = document.getElementById("playlist");
