@@ -6,15 +6,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const currentTrackElement = document.getElementById("current-track");
   const prevTrackButton = document.getElementById("prev-track");
   const nextTrackButton = document.getElementById("next-track");
-  const exportPlaylistButton = document.getElementById(
-    "export-playlist"
-  );
-  const importPlaylistInput = document.getElementById(
-    "import-playlist"
-  );
-  const clearPlaylistButton = document.getElementById(
-    "clear-playlist"
-  );
+  const exportPlaylistButton = document.getElementById("export-playlist");
+  const importPlaylistInput = document.getElementById("import-playlist");
+  const clearPlaylistButton = document.getElementById("clear-playlist");
 
   let playlist = [];
   let currentTrackIndex = 0;

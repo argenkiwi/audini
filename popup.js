@@ -1,6 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const addAllButton = document.getElementById("add-all");
   const openPlaylistButton = document.getElementById("open-playlist");
+  openPlaylistButton.addEventListener("click", () => {
+    chrome.runtime.sendMessage({ type: "openPlaylist" });
+  });
+
+  const addAllButton = document.getElementById("add-all");
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tabId = tabs[0].id;
     chrome.storage.local.get({ audioUrls: {} }, (result) => {
@@ -23,10 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
           listItem.appendChild(link);
           listItem.appendChild(addButton);
           audioList.appendChild(listItem);
-        });
-
-        openPlaylistButton.addEventListener("click", () => {
-          chrome.runtime.sendMessage({ type: "openPlaylist" });
         });
 
         addAllButton.addEventListener("click", () => {
