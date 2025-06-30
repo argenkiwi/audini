@@ -19,24 +19,35 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
+function createPlayerTab() {
+  chrome.tabs.create({ url: chrome.runtime.getURL("player.html") }, (tab) => {
+    playerTabId = tab.id;
+  });
+}
+
+function findPlayer() {
+  chrome.tabs.query({ url: chrome.runtime.getURL("player.html") }, (tabs) => {
+    if (tabs.length > 0) {
+      playerTabId = tabs[0].id;
+      chrome.tabs.update(playerTabId, { active: true });
+    } else {
+      createPlayerTab();
+    }
+  })
+}
+
 function openPlayer() {
   if (playerTabId) {
     chrome.tabs.get(playerTabId, (tab) => {
       if (tab) {
         chrome.tabs.update(playerTabId, { active: true });
       } else {
-        createPlayerTab();
+        findPlayer();
       }
     });
   } else {
-    createPlayerTab();
+    findPlayer();
   }
-}
-
-function createPlayerTab() {
-  chrome.tabs.create({ url: chrome.runtime.getURL("player.html") }, (tab) => {
-    playerTabId = tab.id;
-  });
 }
 
 function addToPlaylist(url) {
