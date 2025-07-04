@@ -1,6 +1,6 @@
 {
   "name": "audini",
-  "packageManager": "yarn@4.9.1",
+  "packageManager": "yarn@4.9.2",
   "scripts": {
     "build": "rollup --input player.js --plugin '@rollup/plugin-node-resolve' --file player.bundle.js"
   },
