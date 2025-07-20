@@ -5,6 +5,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const addAllButton = document.getElementById("add-all");
+  const exportPlaylistButton = document.getElementById("export-playlist");
+
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tabId = tabs[0].id;
     chrome.storage.local.get({ audioUrls: {} }, (result) => {
@@ -32,11 +34,26 @@ document.addEventListener("DOMContentLoaded", () => {
         addAllButton.addEventListener("click", () => {
           chrome.runtime.sendMessage({ type: "addToPlaylist", url: urls });
         });
+
+        exportPlaylistButton.addEventListener("click", () => {
+          const m3uContent = "#EXTM3U\n" + urls.join("\n");
+          const blob = new Blob([m3uContent], { type: "audio/x-mpegurl" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "playlist.m3u";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+
       } else {
         const noAudioMessage = document.createElement("p");
         noAudioMessage.textContent = "No audio files detected on this page.";
         audioList.parentElement.replaceChild(noAudioMessage, audioList);
-        addAllButton.style.display = "none"; // Hide Add All button if no URLs
+        addAllButton.style.display = "none";
+        exportPlaylistButton.style.display = "none";
       }
     });
   });
