@@ -38,10 +38,41 @@ document.addEventListener("DOMContentLoaded", () => {
     updateActivePlaylistItem(currentTrackIndex);
   }
 
-  function playTrack(index) {
+  async function resolveKhinsiderUrl(url) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const text = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, "text/html");
+      const audioElement = doc.querySelector('audio[src]');
+      if (audioElement) {
+        return audioElement.src;
+      }
+    } catch (error) {
+      console.error("Error resolving khinsider URL:", error);
+    }
+    return url;
+  }
+
+  async function playTrack(index) {
     if (index >= 0 && index < playlist.length) {
       currentTrackIndex = index;
-      const trackUrl = playlist[currentTrackIndex];
+      let trackUrl = playlist[currentTrackIndex];
+
+      if (trackUrl.startsWith("https://downloads.khinsider.com/game-soundtracks")) {
+        const resolvedUrl = await resolveKhinsiderUrl(trackUrl);
+        if (resolvedUrl !== trackUrl) {
+          playlist[currentTrackIndex] = resolvedUrl;
+          trackUrl = resolvedUrl;
+          chrome.storage.local.set({ playlist: playlist }, () => {
+            renderPlaylist();
+          });
+        }
+      }
+
       audioPlayer.src = trackUrl;
       audioPlayer.play();
       currentTrackElement.textContent = decodeURI(trackUrl).split("/").pop();
