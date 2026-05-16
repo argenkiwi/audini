@@ -15,15 +15,18 @@
         <button id="next-track">Next</button>
     </div>
     <div id="playlist-container">
-      <h3>Playlist</h3>
-      <div id="playlist-controls">
-        <button id="export-playlist">Export</button>
-        <input type="file" id="import-playlist" accept=".m3u" style="display: none;">
-        <label for="import-playlist" class="button">Import</label>
-        <button id="clear-playlist">Clear All</button>
+      <div id="playlist-toolbar">
+        <h3>Playlist</h3>
+        <div id="playlist-controls">
+          <button id="export-playlist">Export</button>
+          <input type="file" id="import-playlist" accept=".m3u" style="display: none;">
+          <label for="import-playlist" class="button">Import</label>
+          <button id="clear-playlist">Clear All</button>
+        </div>
       </div>
       <ul id="playlist"></ul>
     </div>
+
   </div>
   <script src="player.bundle.js"></script>
 </body>

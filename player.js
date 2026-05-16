@@ -13,29 +13,128 @@ document.addEventListener("DOMContentLoaded", () => {
   let playlist = [];
   let currentTrackIndex = 0;
 
+  async function loadState() {
+    const result = await chrome.storage.local.get({
+      playlist: [],
+      currentTrackIndex: 0,
+      currentTime: 0,
+      volume: 1
+    });
+    playlist = result.playlist;
+    currentTrackIndex = result.currentTrackIndex;
+    renderPlaylist();
+    
+    if (playlist.length > 0) {
+      if (currentTrackIndex >= playlist.length) {
+        currentTrackIndex = 0;
+      }
+      await playTrack(currentTrackIndex, false);
+      audioPlayer.currentTime = result.currentTime || 0;
+    }
+    audioPlayer.volume = result.volume;
+  }
+
+  function saveState() {
+    chrome.storage.local.set({
+      currentTrackIndex,
+      currentTime: audioPlayer.currentTime,
+      volume: audioPlayer.volume
+    });
+  }
+
+  // Save state every 5 seconds and when pausing/ending
+  setInterval(saveState, 5000);
+  audioPlayer.addEventListener("pause", saveState);
+  audioPlayer.addEventListener("volumechange", saveState);
+
+  async function playTrack(index, autoPlay = true) {
+    if (index >= 0 && index < playlist.length) {
+      currentTrackIndex = index;
+      let trackUrl = playlist[currentTrackIndex];
+
+      if (trackUrl.startsWith("https://downloads.khinsider.com/game-soundtracks")) {
+        const resolvedUrl = await resolveKhinsiderUrl(trackUrl);
+        if (resolvedUrl !== trackUrl) {
+          playlist[currentTrackIndex] = resolvedUrl;
+          trackUrl = resolvedUrl;
+          await chrome.storage.local.set({ playlist: playlist });
+          renderPlaylist();
+        }
+      }
+
+      audioPlayer.src = trackUrl;
+      if (autoPlay) {
+        audioPlayer.play().catch(e => console.error("Playback failed:", e));
+      }
+      currentTrackElement.textContent = decodeURIComponent(trackUrl).split("/").pop();
+      updateActivePlaylistItem(currentTrackIndex);
+
+      saveState();
+    } else if (playlist.length > 0) {
+      playTrack(0, autoPlay);
+    } else {
+      currentTrackElement.textContent = "";
+      audioPlayer.pause();
+      audioPlayer.src = "";
+    }
+  }
+
   function renderPlaylist() {
     playlistElement.innerHTML = "";
-    playlist.map(track => decodeURI(track)).forEach((track, index) => {
+
+    if (playlist.length === 0) {
+      const emptyMessage = document.createElement("li");
+      emptyMessage.textContent = "Your playlist is empty. Detect and add audio from the extension popup!";
+      emptyMessage.classList.add("empty-playlist-message");
+      playlistElement.appendChild(emptyMessage);
+      return;
+    }
+
+
+    playlist.forEach((track, index) => {
+      const decodedTrack = decodeURIComponent(track);
       const listItem = document.createElement("li");
 
+      const dragHandle = document.createElement("span");
+      dragHandle.innerHTML = "&#9776;"; // Better drag handle symbol
+      dragHandle.classList.add("drag-handle");
+
       const trackName = document.createElement("span");
-      trackName.textContent = track.substring(track.lastIndexOf('/') + 1);
+      trackName.textContent = decodedTrack.substring(decodedTrack.lastIndexOf('/') + 1);
+      trackName.classList.add("track-name");
       trackName.addEventListener("click", () => playTrack(index));
 
+
       const removeButton = document.createElement("button");
+
       removeButton.textContent = "x";
       removeButton.classList.add("remove-button");
       removeButton.addEventListener("click", (event) => {
-        event.stopPropagation(); // Prevent playing the track when clicking remove
+        event.stopPropagation();
         removeTrack(index);
       });
 
+      listItem.appendChild(dragHandle);
       listItem.appendChild(trackName);
       listItem.appendChild(removeButton);
       playlistElement.appendChild(listItem);
     });
 
+
     updateActivePlaylistItem(currentTrackIndex);
+  }
+
+
+  function playNextTrack() {
+    if (playlist.length === 0) return;
+    currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+    playTrack(currentTrackIndex);
+  }
+
+  function playPrevTrack() {
+    if (playlist.length === 0) return;
+    currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+    playTrack(currentTrackIndex);
   }
 
   async function resolveKhinsiderUrl(url) {
@@ -57,77 +156,8 @@ document.addEventListener("DOMContentLoaded", () => {
     return url;
   }
 
-  async function playTrack(index) {
-    if (index >= 0 && index < playlist.length) {
-      currentTrackIndex = index;
-      let trackUrl = playlist[currentTrackIndex];
-
-      if (trackUrl.startsWith("https://downloads.khinsider.com/game-soundtracks")) {
-        const resolvedUrl = await resolveKhinsiderUrl(trackUrl);
-        if (resolvedUrl !== trackUrl) {
-          playlist[currentTrackIndex] = resolvedUrl;
-          trackUrl = resolvedUrl;
-          chrome.storage.local.set({ playlist: playlist }, () => {
-            renderPlaylist();
-          });
-        }
-      }
-
-      audioPlayer.src = trackUrl;
-      audioPlayer.play();
-      currentTrackElement.textContent = decodeURI(trackUrl).split("/").pop();
-      updateActivePlaylistItem(currentTrackIndex);
-    } else if (playlist.length > 0) {
-      // If current track is removed and playlist is not empty, play the first track
-      playTrack(0);
-    } else {
-      // If playlist is empty, clear current track display and pause player
-      currentTrackElement.textContent = "";
-      audioPlayer.pause();
-      audioPlayer.src = "";
-    }
-  }
-
-  function playNextTrack() {
-    if (playlist.length === 0) return;
-    currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-    playTrack(currentTrackIndex);
-  }
-
-  function playPrevTrack() {
-    if (playlist.length === 0) return;
-    currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
-    playTrack(currentTrackIndex);
-  }
-
-  function removeTrack(index) {
-    playlist.splice(index, 1);
-    chrome.storage.local.set({ playlist }, () => {
-      if (index === currentTrackIndex) {
-        // If the current track was removed, play the next one or clear if playlist is empty
-        playTrack(currentTrackIndex);
-      } else if (index < currentTrackIndex) {
-        // If a track before the current one was removed, adjust currentTrackIndex
-        currentTrackIndex--;
-        renderPlaylist(); // Re-render to update active item index
-      } else {
-        renderPlaylist();
-      }
-    });
-  }
-
-  function clearPlaylist() {
-    playlist = [];
-    chrome.storage.local.set({ playlist }, () => {
-      renderPlaylist();
-      currentTrackElement.textContent = "";
-      audioPlayer.pause();
-      audioPlayer.src = "";
-      currentTrackIndex = 0;
-    });
-  }
-
   function updateActivePlaylistItem(activeIndex) {
+
     const items = playlistElement.getElementsByTagName("li");
     for (let i = 0; i < items.length; i++) {
       items[i].classList.toggle("active", i === activeIndex);
@@ -173,32 +203,53 @@ document.addEventListener("DOMContentLoaded", () => {
   importPlaylistInput.addEventListener("change", importPlaylist);
   clearPlaylistButton.addEventListener("click", clearPlaylist);
 
-  chrome.storage.local.get({ playlist: [] }, (result) => {
-    playlist = result.playlist;
-    renderPlaylist();
-    if (playlist.length > 0) {
-      playTrack(0);
-    }
-  });
+  loadState();
 
   chrome.storage.onChanged.addListener((changes, namespace) => {
-    if (changes.playlist) {
+    if (changes.playlist && namespace === 'local') {
       playlist = changes.playlist.newValue;
       renderPlaylist();
     }
   });
 
+  function removeTrack(index) {
+    playlist.splice(index, 1);
+    chrome.storage.local.set({ playlist }).then(() => {
+      if (index === currentTrackIndex) {
+        playTrack(currentTrackIndex);
+      } else if (index < currentTrackIndex) {
+        currentTrackIndex--;
+        renderPlaylist();
+      } else {
+        renderPlaylist();
+      }
+    });
+  }
+
+  function clearPlaylist() {
+    playlist = [];
+    chrome.storage.local.set({ playlist, currentTrackIndex: 0, currentTime: 0 }).then(() => {
+      renderPlaylist();
+      currentTrackElement.textContent = "";
+      audioPlayer.pause();
+      audioPlayer.src = "";
+      currentTrackIndex = 0;
+    });
+  }
+
   // Initialize Sortable.js
   new Sortable(playlistElement, {
     animation: 150,
+    handle: '.drag-handle',
     onEnd: function(evt) {
+
       const oldIndex = evt.oldIndex;
       const newIndex = evt.newIndex;
 
       const [movedItem] = playlist.splice(oldIndex, 1);
       playlist.splice(newIndex, 0, movedItem);
 
-      chrome.storage.local.set({ playlist }, () => {
+      chrome.storage.local.set({ playlist }).then(() => {
         // After reordering, ensure the active track is still correctly highlighted
         // and if the current track was moved, update its index
         if (oldIndex === currentTrackIndex) {
@@ -210,6 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         updateActivePlaylistItem(currentTrackIndex);
       });
+
     },
   });
 });

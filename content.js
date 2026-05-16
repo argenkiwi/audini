@@ -27,9 +27,30 @@ function sendUrlsToBackground() {
   }
 }
 
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+const debouncedSendUrlsToBackground = debounce(sendUrlsToBackground, 500);
+
 // Initial scan
 sendUrlsToBackground();
 
 // Use MutationObserver to detect dynamically added elements
-const observer = new MutationObserver(sendUrlsToBackground);
+const observer = new MutationObserver((mutations) => {
+  // Only re-scan if nodes were added
+  const nodesAdded = mutations.some(mutation => mutation.addedNodes.length > 0);
+  if (nodesAdded) {
+    debouncedSendUrlsToBackground();
+  }
+});
 observer.observe(document.body, { childList: true, subtree: true });
+
