@@ -1,33 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Audini Player</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="player.css">
 </head>
 <body>
   <div id="player-container">
-    <div id="audio-info">
-      <h2 id="current-track"></h2>
-    </div>
-    <audio id="audio-player" controls></audio>
-    <div id="controls">
-        <button id="prev-track">Prev</button>
-        <button id="next-track">Next</button>
-    </div>
-    <div id="playlist-container">
+    
+    <!-- Sticky Glassmorphic Header Player -->
+    <header id="sticky-header">
+      <div id="audio-info">
+        <div class="now-playing-tag">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+          </svg>
+          NOW PLAYING
+        </div>
+        <h2 id="current-track">No track selected</h2>
+      </div>
+
+      <audio id="audio-player" controls></audio>
+
+      <div id="controls">
+        <button id="prev-track" title="Previous Track" aria-label="Previous Track">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="19 20 9 12 19 4 19 20"></polygon>
+            <line x1="5" y1="19" x2="5" y2="5"></line>
+          </svg>
+          <span>Prev</span>
+        </button>
+        <button id="next-track" title="Next Track" aria-label="Next Track">
+          <span>Next</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 4 15 12 5 20 5 4"></polygon>
+            <line x1="19" y1="5" x2="19" y2="19"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Playlist Main Content -->
+    <main id="playlist-container">
       <div id="playlist-toolbar">
-        <h3>Playlist</h3>
+        <div class="playlist-title-group">
+          <h3>Playlist</h3>
+          <span id="track-count-badge" class="badge">0 tracks</span>
+        </div>
         <div id="playlist-controls">
-          <button id="export-playlist">Export</button>
+          <button id="export-playlist" class="btn btn-secondary" title="Export M3U Playlist">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            Export
+          </button>
           <input type="file" id="import-playlist" accept=".m3u" style="display: none;">
-          <label for="import-playlist" class="button">Import</label>
-          <button id="clear-playlist">Clear All</button>
+          <label for="import-playlist" class="button btn btn-secondary" title="Import M3U Playlist">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Import
+          </label>
+          <button id="clear-playlist" class="btn btn-danger" title="Clear All Tracks">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Clear All
+          </button>
         </div>
       </div>
       <ul id="playlist"></ul>
-    </div>
+    </main>
 
   </div>
   <script src="player.bundle.js"></script>
 </body>
 </html>
+
