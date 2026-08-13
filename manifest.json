@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Audini",
-  "version": "1.0",
+  "version": "1.0.1",
   "description": "A Chrome extension to detect audio file URLs on web pages.",
+
   "permissions": [
     "storage",
     "activeTab",

@@ -1,5 +1,6 @@
 {
   "name": "audini",
+  "version": "1.0.1",
   "packageManager": "yarn@1.22.22",
   "scripts": {
     "build": "rollup -c",
@@ -13,3 +14,4 @@
     "rollup": "^4.44.1"
   }
 }
+
