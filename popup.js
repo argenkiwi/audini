@@ -16,6 +16,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const urls = result.audioUrls[tabId] || [];
     audioList.innerHTML = "";
 
+    const detectedBadge = document.getElementById("detected-badge");
+    if (detectedBadge) {
+      detectedBadge.textContent = `${urls.length} detected`;
+    }
+
     if (urls.length > 0) {
       urls.forEach((url) => {
         const listItem = document.createElement("li");
@@ -26,7 +31,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         link.title = url;
 
         const addButton = document.createElement("button");
-        addButton.textContent = "+";
+        addButton.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+        addButton.classList.add("add-track-btn");
+        addButton.title = "Add track to playlist";
         addButton.addEventListener("click", () => {
           chrome.runtime.sendMessage({ type: "addToPlaylist", url });
         });
@@ -36,17 +43,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         audioList.appendChild(listItem);
       });
 
-      addAllButton.style.display = "inline-block";
-      exportPlaylistButton.style.display = "inline-block";
+      addAllButton.style.display = "inline-flex";
+      exportPlaylistButton.style.display = "inline-flex";
     } else {
       const noAudioMessage = document.createElement("p");
       noAudioMessage.textContent = "No audio files detected on this page.";
+      noAudioMessage.classList.add("no-audio");
       audioList.appendChild(noAudioMessage);
       addAllButton.style.display = "none";
       exportPlaylistButton.style.display = "none";
     }
     return urls;
   }
+
 
   let urls = await updateUI();
 

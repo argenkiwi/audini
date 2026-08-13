@@ -1,20 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Audini</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="popup.css">
 </head>
 <body>
-  <h1>Detected Audio Files</h1>
-  <div id="controls-top">
-    <button id="open-playlist">Open Player</button>
-    <button id="add-all">Add All</button>
-    <button id="export-playlist">Export</button>
+  <div id="popup-container">
+    <header id="popup-header">
+      <div class="brand">
+        <div class="logo-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"></path>
+            <circle cx="6" cy="18" r="3"></circle>
+            <circle cx="18" cy="16" r="3"></circle>
+          </svg>
+        </div>
+        <h1>Audini</h1>
+        <span id="detected-badge" class="badge">0 detected</span>
+      </div>
+
+      <div id="controls-top">
+        <button id="open-playlist" class="btn btn-primary" title="Open Full Player Page">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+          Player
+        </button>
+        <button id="add-all" class="btn btn-secondary" title="Add All Audio to Playlist" style="display: none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add All
+        </button>
+        <button id="export-playlist" class="btn btn-secondary" title="Export M3U Playlist" style="display: none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          Export
+        </button>
+      </div>
+    </header>
+
+    <main id="list-wrapper">
+      <ul id="audio-list"></ul>
+    </main>
   </div>
-
-
-  <ul id="audio-list"></ul>
 
   <script src="popup.js"></script>
 </body>
 </html>
+

@@ -66,21 +66,27 @@ document.addEventListener("DOMContentLoaded", () => {
       if (autoPlay) {
         audioPlayer.play().catch(e => console.error("Playback failed:", e));
       }
-      currentTrackElement.textContent = decodeURIComponent(trackUrl).split("/").pop();
-      updateActivePlaylistItem(currentTrackIndex);
+    currentTrackElement.textContent = decodeURIComponent(trackUrl).split("/").pop();
+    updateActivePlaylistItem(currentTrackIndex);
 
-      saveState();
-    } else if (playlist.length > 0) {
-      playTrack(0, autoPlay);
-    } else {
-      currentTrackElement.textContent = "";
-      audioPlayer.pause();
-      audioPlayer.src = "";
-    }
+    saveState();
+  } else if (playlist.length > 0) {
+    playTrack(0, autoPlay);
+  } else {
+    currentTrackElement.textContent = "No track selected";
+    audioPlayer.pause();
+    audioPlayer.src = "";
   }
+}
 
   function renderPlaylist() {
     playlistElement.innerHTML = "";
+    
+    // Update track count badge
+    const trackCountBadge = document.getElementById("track-count-badge");
+    if (trackCountBadge) {
+      trackCountBadge.textContent = `${playlist.length} ${playlist.length === 1 ? 'track' : 'tracks'}`;
+    }
 
     if (playlist.length === 0) {
       const emptyMessage = document.createElement("li");
@@ -90,39 +96,44 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-
     playlist.forEach((track, index) => {
       const decodedTrack = decodeURIComponent(track);
       const listItem = document.createElement("li");
 
       const dragHandle = document.createElement("span");
-      dragHandle.innerHTML = "&#9776;"; // Better drag handle symbol
+      dragHandle.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg>`;
       dragHandle.classList.add("drag-handle");
+      dragHandle.title = "Drag to reorder";
+
+      const trackNum = document.createElement("span");
+      trackNum.classList.add("track-num");
+      trackNum.textContent = index + 1;
 
       const trackName = document.createElement("span");
       trackName.textContent = decodedTrack.substring(decodedTrack.lastIndexOf('/') + 1);
       trackName.classList.add("track-name");
+      trackName.title = decodedTrack;
       trackName.addEventListener("click", () => playTrack(index));
 
-
       const removeButton = document.createElement("button");
-
-      removeButton.textContent = "x";
+      removeButton.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
       removeButton.classList.add("remove-button");
+      removeButton.title = "Remove from playlist";
       removeButton.addEventListener("click", (event) => {
         event.stopPropagation();
         removeTrack(index);
       });
 
       listItem.appendChild(dragHandle);
+      listItem.appendChild(trackNum);
       listItem.appendChild(trackName);
       listItem.appendChild(removeButton);
       playlistElement.appendChild(listItem);
     });
 
-
     updateActivePlaylistItem(currentTrackIndex);
   }
+
 
 
   function playNextTrack() {
