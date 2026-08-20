@@ -307,21 +307,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   chrome.storage.onChanged.addListener((changes, namespace) => {
     if (changes.playlist && namespace === 'local') {
-      playlist = changes.playlist.newValue;
+      playlist = changes.playlist.newValue || [];
       renderPlaylist();
     }
   });
 
   function removeTrack(index) {
     playlist.splice(index, 1);
-    chrome.storage.local.set({ playlist }).then(() => {
+    if (index < currentTrackIndex) {
+      currentTrackIndex--;
+    } else if (currentTrackIndex >= playlist.length) {
+      currentTrackIndex = Math.max(0, playlist.length - 1);
+    }
+    chrome.storage.local.set({ playlist, currentTrackIndex }).then(() => {
+      renderPlaylist();
       if (index === currentTrackIndex) {
         playTrack(currentTrackIndex);
-      } else if (index < currentTrackIndex) {
-        currentTrackIndex--;
-        renderPlaylist();
-      } else {
-        renderPlaylist();
       }
     });
   }
@@ -346,20 +347,23 @@ document.addEventListener("DOMContentLoaded", () => {
       const oldIndex = evt.oldIndex;
       const newIndex = evt.newIndex;
 
+      if (oldIndex === newIndex) return;
+
       const [movedItem] = playlist.splice(oldIndex, 1);
       playlist.splice(newIndex, 0, movedItem);
 
-      chrome.storage.local.set({ playlist }).then(() => {
-        // After reordering, ensure the active track is still correctly highlighted
-        // and if the current track was moved, update its index
-        if (oldIndex === currentTrackIndex) {
-          currentTrackIndex = newIndex;
-        } else if (oldIndex < currentTrackIndex && newIndex >= currentTrackIndex) {
-          currentTrackIndex--;
-        } else if (oldIndex > currentTrackIndex && newIndex <= currentTrackIndex) {
-          currentTrackIndex++;
-        }
-        updateActivePlaylistItem(currentTrackIndex);
+      // After reordering, ensure the active track is still correctly highlighted
+      // and if the current track was moved, update its index
+      if (oldIndex === currentTrackIndex) {
+        currentTrackIndex = newIndex;
+      } else if (oldIndex < currentTrackIndex && newIndex >= currentTrackIndex) {
+        currentTrackIndex--;
+      } else if (oldIndex > currentTrackIndex && newIndex <= currentTrackIndex) {
+        currentTrackIndex++;
+      }
+
+      chrome.storage.local.set({ playlist, currentTrackIndex }).then(() => {
+        renderPlaylist();
       });
     },
   });
