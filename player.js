@@ -9,9 +9,64 @@ document.addEventListener("DOMContentLoaded", () => {
   const exportPlaylistButton = document.getElementById("export-playlist");
   const importPlaylistInput = document.getElementById("import-playlist");
   const clearPlaylistButton = document.getElementById("clear-playlist");
+  const scrollToCurrentButton = document.getElementById("scroll-to-current");
+  const stickyHeader = document.getElementById("sticky-header");
+  const statusTag = document.getElementById("status-tag");
+  const statusText = document.getElementById("status-text");
+  const statusIcon = statusTag ? statusTag.querySelector(".status-icon") : null;
 
   let playlist = [];
   let currentTrackIndex = 0;
+
+  const STATUS_ICONS = {
+    playing: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`,
+    paused: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`,
+    buffering: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>`,
+    stopped: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>`
+  };
+
+  function updatePlaybackStatus(status) {
+    if (!statusTag) return;
+    statusTag.className = `now-playing-tag ${status}`;
+    if (statusIcon && STATUS_ICONS[status]) {
+      statusIcon.innerHTML = STATUS_ICONS[status];
+    }
+    if (statusText) {
+      switch (status) {
+        case "playing":
+          statusText.textContent = "NOW PLAYING";
+          break;
+        case "paused":
+          statusText.textContent = "PAUSED";
+          break;
+        case "buffering":
+          statusText.textContent = "LOADING";
+          break;
+        case "stopped":
+        default:
+          statusText.textContent = playlist.length > 0 ? "READY" : "NO TRACK";
+          break;
+      }
+    }
+  }
+
+  // Synchronize sticky header height dynamically for seamless toolbar positioning
+  if (stickyHeader && window.ResizeObserver) {
+    const updateHeaderHeight = () => {
+      const height = stickyHeader.offsetHeight;
+      document.documentElement.style.setProperty("--sticky-header-height", `${height}px`);
+    };
+    new ResizeObserver(updateHeaderHeight).observe(stickyHeader);
+    updateHeaderHeight();
+  }
+
+  function scrollToCurrentTrack() {
+    if (playlist.length === 0) return;
+    const activeItem = playlistElement.querySelector("li.active");
+    if (activeItem) {
+      activeItem.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
 
   async function loadState() {
     const result = await chrome.storage.local.get({
@@ -30,6 +85,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       await playTrack(currentTrackIndex, false);
       audioPlayer.currentTime = result.currentTime || 0;
+      updatePlaybackStatus("paused");
+    } else {
+      updatePlaybackStatus("stopped");
     }
     audioPlayer.volume = result.volume;
   }
@@ -65,19 +123,23 @@ document.addEventListener("DOMContentLoaded", () => {
       audioPlayer.src = trackUrl;
       if (autoPlay) {
         audioPlayer.play().catch(e => console.error("Playback failed:", e));
+        updatePlaybackStatus("playing");
+      } else {
+        updatePlaybackStatus("paused");
       }
-    currentTrackElement.textContent = decodeURIComponent(trackUrl).split("/").pop();
-    updateActivePlaylistItem(currentTrackIndex);
+      currentTrackElement.textContent = decodeURIComponent(trackUrl).split("/").pop();
+      updateActivePlaylistItem(currentTrackIndex);
 
-    saveState();
-  } else if (playlist.length > 0) {
-    playTrack(0, autoPlay);
-  } else {
-    currentTrackElement.textContent = "No track selected";
-    audioPlayer.pause();
-    audioPlayer.src = "";
+      saveState();
+    } else if (playlist.length > 0) {
+      playTrack(0, autoPlay);
+    } else {
+      currentTrackElement.textContent = "No track selected";
+      audioPlayer.pause();
+      audioPlayer.src = "";
+      updatePlaybackStatus("stopped");
+    }
   }
-}
 
   function renderPlaylist() {
     playlistElement.innerHTML = "";
@@ -88,11 +150,16 @@ document.addEventListener("DOMContentLoaded", () => {
       trackCountBadge.textContent = `${playlist.length} ${playlist.length === 1 ? 'track' : 'tracks'}`;
     }
 
+    if (scrollToCurrentButton) {
+      scrollToCurrentButton.disabled = playlist.length === 0;
+    }
+
     if (playlist.length === 0) {
       const emptyMessage = document.createElement("li");
       emptyMessage.textContent = "Your playlist is empty. Detect and add audio from the extension popup!";
       emptyMessage.classList.add("empty-playlist-message");
       playlistElement.appendChild(emptyMessage);
+      updatePlaybackStatus("stopped");
       return;
     }
 
@@ -134,8 +201,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateActivePlaylistItem(currentTrackIndex);
   }
 
-
-
   function playNextTrack() {
     if (playlist.length === 0) return;
     currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
@@ -168,7 +233,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateActivePlaylistItem(activeIndex) {
-
     const items = playlistElement.getElementsByTagName("li");
     for (let i = 0; i < items.length; i++) {
       items[i].classList.toggle("active", i === activeIndex);
@@ -207,12 +271,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  audioPlayer.addEventListener("ended", playNextTrack);
+  // Audio element playback status listeners
+  audioPlayer.addEventListener("play", () => updatePlaybackStatus("playing"));
+  audioPlayer.addEventListener("playing", () => updatePlaybackStatus("playing"));
+  audioPlayer.addEventListener("pause", () => {
+    if (playlist.length > 0 && audioPlayer.src) {
+      updatePlaybackStatus("paused");
+    } else {
+      updatePlaybackStatus("stopped");
+    }
+  });
+  audioPlayer.addEventListener("waiting", () => updatePlaybackStatus("buffering"));
+  audioPlayer.addEventListener("loadstart", () => {
+    if (audioPlayer.src) {
+      updatePlaybackStatus("buffering");
+    }
+  });
+  audioPlayer.addEventListener("ended", () => {
+    playNextTrack();
+  });
+  audioPlayer.addEventListener("emptied", () => {
+    updatePlaybackStatus("stopped");
+  });
+
   prevTrackButton.addEventListener("click", playPrevTrack);
   nextTrackButton.addEventListener("click", playNextTrack);
   exportPlaylistButton.addEventListener("click", exportPlaylist);
   importPlaylistInput.addEventListener("change", importPlaylist);
   clearPlaylistButton.addEventListener("click", clearPlaylist);
+  if (scrollToCurrentButton) {
+    scrollToCurrentButton.addEventListener("click", scrollToCurrentTrack);
+  }
 
   loadState();
 
@@ -241,10 +330,11 @@ document.addEventListener("DOMContentLoaded", () => {
     playlist = [];
     chrome.storage.local.set({ playlist, currentTrackIndex: 0, currentTime: 0 }).then(() => {
       renderPlaylist();
-      currentTrackElement.textContent = "";
+      currentTrackElement.textContent = "No track selected";
       audioPlayer.pause();
       audioPlayer.src = "";
       currentTrackIndex = 0;
+      updatePlaybackStatus("stopped");
     });
   }
 
@@ -253,7 +343,6 @@ document.addEventListener("DOMContentLoaded", () => {
     animation: 150,
     handle: '.drag-handle',
     onEnd: function(evt) {
-
       const oldIndex = evt.oldIndex;
       const newIndex = evt.newIndex;
 
@@ -272,7 +361,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         updateActivePlaylistItem(currentTrackIndex);
       });
-
     },
   });
 });
