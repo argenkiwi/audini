@@ -15,13 +15,14 @@
     <!-- Sticky Glassmorphic Header Player -->
     <header id="sticky-header">
       <div id="audio-info">
-        <div class="now-playing-tag">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-          </svg>
-          NOW PLAYING
+        <div id="status-tag" class="now-playing-tag stopped">
+          <span class="status-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polygon points="10 8 16 12 10 16 10 8"></polygon>
+            </svg>
+          </span>
+          <span id="status-text">NO TRACK</span>
         </div>
         <h2 id="current-track">No track selected</h2>
       </div>
@@ -54,6 +55,17 @@
           <span id="track-count-badge" class="badge">0 tracks</span>
         </div>
         <div id="playlist-controls">
+          <button id="scroll-to-current" class="btn btn-secondary" title="Scroll to Playing Track" aria-label="Scroll to Playing Track">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <circle cx="12" cy="12" r="3"></circle>
+              <line x1="12" y1="2" x2="12" y2="5"></line>
+              <line x1="12" y1="19" x2="12" y2="22"></line>
+              <line x1="2" y1="12" x2="5" y2="12"></line>
+              <line x1="19" y1="12" x2="22" y2="12"></line>
+            </svg>
+            Locate
+          </button>
           <button id="export-playlist" class="btn btn-secondary" title="Export M3U Playlist">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>

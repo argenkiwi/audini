@@ -74,13 +74,43 @@ body {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1px;
-  color: var(--primary-accent);
   text-transform: uppercase;
-  background: rgba(99, 102, 241, 0.1);
   padding: 4px 10px;
   border-radius: 20px;
-  border: 1px solid rgba(99, 102, 241, 0.2);
   margin-bottom: 8px;
+  transition: all 0.25s ease;
+}
+
+.now-playing-tag .status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.now-playing-tag.playing {
+  color: var(--primary-accent);
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
+}
+
+.now-playing-tag.paused {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.15);
+}
+
+.now-playing-tag.buffering {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.now-playing-tag.stopped {
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 #current-track {
@@ -141,12 +171,21 @@ body {
 }
 
 #playlist-toolbar {
+  position: sticky;
+  top: var(--sticky-header-height, 200px);
+  z-index: 50;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 14px;
+  margin: -20px -20px 16px -20px;
+  padding: 16px 20px 14px 20px;
+  background: rgba(30, 41, 59, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-subtle);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.3);
 }
 
 .playlist-title-group {
@@ -173,6 +212,7 @@ body {
 
 #playlist-controls {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -188,6 +228,12 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .btn-secondary {
